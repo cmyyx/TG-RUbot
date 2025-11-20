@@ -25,10 +25,23 @@ import {
 
 export const allowed_updates = ['message', 'message_reaction', 'edited_message'];
 
+/**
+ * 验证密钥令牌格式
+ * Validate secret token format
+ * @param {string} token - 密钥令牌
+ * @returns {boolean} - 是否有效
+ */
 export function validateSecretToken(token) {
   return token.length > 15 && /[A-Z]/.test(token) && /[a-z]/.test(token) && /[0-9]/.test(token);
 }
 
+/**
+ * 创建 JSON 响应
+ * Create JSON response
+ * @param {object} data - 响应数据
+ * @param {number} status - HTTP 状态码
+ * @returns {Response} - HTTP 响应对象
+ */
 export function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -36,6 +49,14 @@ export function jsonResponse(data, status = 200) {
   });
 }
 
+/**
+ * 向 Telegram API 发送 POST 请求
+ * Post request to Telegram API
+ * @param {string} token - 机器人令牌
+ * @param {string} method - API 方法名
+ * @param {object} body - 请求体
+ * @returns {Promise<Response>} - HTTP 响应对象
+ */
 export async function postToTelegramApi(token, method, body) {
   return fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: 'POST',
@@ -44,6 +65,16 @@ export async function postToTelegramApi(token, method, body) {
   });
 }
 
+/**
+ * 处理机器人安装请求
+ * Handle bot installation request
+ * @param {Request} request - HTTP 请求对象
+ * @param {string} ownerUid - 所有者用户ID
+ * @param {string} botToken - 机器人令牌
+ * @param {string} prefix - URL 前缀
+ * @param {string} secretToken - 密钥令牌
+ * @returns {Promise<Response>} - HTTP 响应对象
+ */
 export async function handleInstall(request, ownerUid, botToken, prefix, secretToken) {
   if (!validateSecretToken(secretToken)) {
     return jsonResponse({
@@ -74,6 +105,13 @@ export async function handleInstall(request, ownerUid, botToken, prefix, secretT
   }
 }
 
+/**
+ * 处理机器人卸载请求
+ * Handle bot uninstallation request
+ * @param {string} botToken - 机器人令牌
+ * @param {string} secretToken - 密钥令牌
+ * @returns {Promise<Response>} - HTTP 响应对象
+ */
 export async function handleUninstall(botToken, secretToken) {
   if (!validateSecretToken(secretToken)) {
     return jsonResponse({
@@ -96,6 +134,17 @@ export async function handleUninstall(botToken, secretToken) {
   }
 }
 
+/**
+ * 处理 Webhook 请求
+ * Handle webhook request
+ * @param {Request} request - HTTP 请求对象
+ * @param {string} ownerUid - 所有者用户ID
+ * @param {string} botToken - 机器人令牌
+ * @param {string} secretToken - 密钥令牌
+ * @param {string} childBotUrl - 子机器人 URL
+ * @param {string} childBotSecretToken - 子机器人密钥令牌
+ * @returns {Promise<Response>} - HTTP 响应对象
+ */
 export async function handleWebhook(request, ownerUid, botToken, secretToken, childBotUrl, childBotSecretToken) {
   if (secretToken !== request.headers.get('X-Telegram-Bot-Api-Secret-Token')) {
     return new Response('Unauthorized', { status: 401 });
@@ -532,6 +581,13 @@ export async function handleWebhook(request, ownerUid, botToken, secretToken, ch
   }
 }
 
+/**
+ * 处理 HTTP 请求（主入口）
+ * Handle HTTP request (main entry point)
+ * @param {Request} request - HTTP 请求对象
+ * @param {object} config - 配置对象
+ * @returns {Promise<Response>} - HTTP 响应对象
+ */
 export async function handleRequest(request, config) {
   const { prefix, secretToken, childBotUrl, childBotSecretToken } = config;
 

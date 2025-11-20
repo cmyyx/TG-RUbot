@@ -5,3 +5,21 @@ keep_vars = true
 
 [placement]
 mode = "smart"
+
+# Cron 触发器 - 用于自动置顶续期功能
+# Cron trigger - for automatic pin renewal feature
+# 每周日午夜执行 / Runs every Sunday at midnight
+[triggers]
+crons = ["0 0 * * 0"]
+
+# 环境变量说明 / Environment Variables
+# 必需的基础变量 / Required basic variables:
+# - PREFIX: URL 前缀，例如 "public" / URL prefix, e.g., "public"
+# - SECRET_TOKEN: 安全令牌（至少16位，包含大小写字母和数字）/ Secret token (at least 16 chars, with upper/lower case and numbers)
+#
+# 可选变量（用于自动置顶续期功能）/ Optional variables (for automatic pin renewal):
+# - BOT_TOKEN: 机器人 API Token（从 @BotFather 获取）/ Bot API Token (from @BotFather)
+# - OWNER_UID: Telegram 用户 ID（从 @userinfobot 获取）/ Telegram User ID (from @userinfobot)
+#
+# 注意：环境变量需要在 Cloudflare Dashboard 的 Worker Settings 中配置
+# Note: Environment variables need to be configured in Cloudflare Dashboard Worker Settings

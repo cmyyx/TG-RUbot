@@ -6,6 +6,7 @@
  */
 
 import { handleRequest } from './core.js';
+import { handleScheduled } from './pinRenewalManager.js';
 
 export default {
     async fetch(request, env, ctx) {
@@ -17,5 +18,17 @@ export default {
         };
 
         return handleRequest(request, config);
+    },
+
+    /**
+     * Scheduled handler for Cron triggers
+     * 定时任务处理函数 - 用于 Cron 触发器
+     * 
+     * @param {object} event - Cloudflare Workers scheduled event
+     * @param {object} env - Environment variables
+     * @param {object} ctx - Execution context
+     */
+    async scheduled(event, env, ctx) {
+        await handleScheduled(event, env, ctx);
     }
 };
