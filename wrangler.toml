@@ -8,9 +8,9 @@ mode = "smart"
 
 # Cron 触发器 - 用于自动置顶续期功能
 # Cron trigger - for automatic pin renewal feature
-# 每周日午夜执行 / Runs every Sunday at midnight
+# 每周日午夜执行 / Runs every Sunday at midnight (UTC)
 [triggers]
-crons = ["0 0 * * 0"]
+crons = ["0 0 * * SUN"]
 
 # 环境变量说明 / Environment Variables
 # 必需的基础变量 / Required basic variables:
