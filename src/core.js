@@ -324,8 +324,8 @@ export async function handleWebhook(request, ownerUid, botToken, secretToken, ch
   // --- commands ---
 
   try {
-    if ("/start" === message.text) {
-      // Introduction words for various scenarios
+    if ("/start" === message.text && fromUser.id.toString() === ownerUid) {
+      // Introduction words for owner only
       let introduction = "*Welcome\\!*" +
           "\n>I'm a PM bot\\." +
           "\n>I'll forward your messages to my owner, and vice versa\\." +
@@ -350,94 +350,93 @@ export async function handleWebhook(request, ownerUid, botToken, secretToken, ch
           "\n" +
           "\n*If you want to see this message again,*" +
           "\n*Send `/start` to me\\.*";
-      if (fromUser.id.toString() === ownerUid) {
-        // for owner only
-        introduction += "\n" +
-            "\n*The contents below are ONLY visible and valid for bot owner\\.*" +
+      // for owner only
+      // for owner only
+      introduction += "\n" +
+          "\n*The contents below are ONLY visible and valid for bot owner\\.*" +
+          "\n" +
+          "\n**>DELETE MESSAGE:" +
+          "\n>  I can delete both your messages and mine in the group since I have the necessary permissions\\." +
+          "\n" +
+          "\n*For Help*" +
+          "\nThis bot is totally *open source* and *free* to use\\. You can mail to *vivalavida@linux\\.do* for getting help\\. " +
+          "\nOr you can connect on [Linux Do](https://linux.do/t/topic/620510?u=ru_sirius)\\." +
+          "\n";
+      if (fromChat.is_forum && message.is_topic_message) {
+        // commands in PM topic
+        introduction +=
+            "\n*Commands in other places:*" +
+            "\nIn a personal chat with the bot:" +
+            "\n`.!pm_RUbot_doReset!.`" +
+            "\nIn the general topic of the PM chat super group:" +
+            "\n`.!pm_RUbot_checkInit!.`" +
+            "\n`.!pm_RUbot_doInit!.`" +
+            "\n`.!pm_RUbot_doReset!.`" +
             "\n" +
-            "\n**>DELETE MESSAGE:" +
-            "\n>  I can delete both your messages and mine in the group since I have the necessary permissions\\." +
+            "\n*Valid commands in here:*" +
+            "\n*BAN THIS TOPIC*" +
+            "\n➡️`.!pm_RUbot_ban!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n**>DESCRIPTION:" +
+            "\n>Block the topic where the command was sent," +
+            " stop forwarding messages from the corresponding chat," +
+            " and send a message to inform the other party that they have been banned\\.||" +
+            "\n➡️`.!pm_RUbot_unban!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n**>DESCRIPTION:" +
+            "\n>Unblock the topic where the command was sent," +
+            " and send a message to inform the other party that they have been unbanned\\.||" +
+            "\n➡️`.!pm_RUbot_silent_ban!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n**>DESCRIPTION:" +
+            "\n>Block the topic where the command was sent\\." +
+            " stop forwarding messages from the corresponding chat\\.||" +
+            "\n➡️`.!pm_RUbot_silent_unban!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n**>DESCRIPTION:" +
+            "\n>Unblock the topic where the command was sent\\.||";
+      } else if (fromChat.is_forum) {
+        // commands in General topic
+        introduction +=
+            "\n*Commands in other places:*" +
+            "\nIn a personal chat with the bot:" +
+            "\n`.!pm_RUbot_doReset!.`" +
+            "\nIn the corresponding PM chat Topic:" +
+            "\n`.!pm_RUbot_ban!.`" +
+            "\n`.!pm_RUbot_unban!.`" +
+            "\n`.!pm_RUbot_silent_ban!.`" +
+            "\n`.!pm_RUbot_silent_unban!.`" +
             "\n" +
-            "\n*For Help*" +
-            "\nThis bot is totally *open source* and *free* to use\\. You can mail to *vivalavida@linux\\.do* for getting help\\. " +
-            "\nOr you can connect on [Linux Do](https://linux.do/t/topic/620510?u=ru_sirius)\\." +
+            "\n*Valid commands in here:*" +
+            "\n➡️`.!pm_RUbot_checkInit!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n>Check the initialization status, and the result reply is in the personal chat with the robot\\." +
+            "\n➡️`.!pm_RUbot_doInit!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n>Perform initial settings, and the result reply is in the personal chat with the robot\\." +
+            "\n➡️`.!pm_RUbot_doReset!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n>Reset the settings, and the result reply is in the personal chat with the robot\\." +
             "\n";
-        if (fromChat.is_forum && message.is_topic_message) {
-          // commands in PM topic
-          introduction +=
-              "\n*Commands in other places:*" +
-              "\nIn a personal chat with the bot:" +
-              "\n`.!pm_RUbot_doReset!.`" +
-              "\nIn the general topic of the PM chat super group:" +
-              "\n`.!pm_RUbot_checkInit!.`" +
-              "\n`.!pm_RUbot_doInit!.`" +
-              "\n`.!pm_RUbot_doReset!.`" +
-              "\n" +
-              "\n*Valid commands in here:*" +
-              "\n*BAN THIS TOPIC*" +
-              "\n➡️`.!pm_RUbot_ban!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n**>DESCRIPTION:" +
-              "\n>Block the topic where the command was sent," +
-              " stop forwarding messages from the corresponding chat," +
-              " and send a message to inform the other party that they have been banned\\.||" +
-              "\n➡️`.!pm_RUbot_unban!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n**>DESCRIPTION:" +
-              "\n>Unblock the topic where the command was sent," +
-              " and send a message to inform the other party that they have been unbanned\\.||" +
-              "\n➡️`.!pm_RUbot_silent_ban!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n**>DESCRIPTION:" +
-              "\n>Block the topic where the command was sent\\." +
-              " stop forwarding messages from the corresponding chat\\.||" +
-              "\n➡️`.!pm_RUbot_silent_unban!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n**>DESCRIPTION:" +
-              "\n>Unblock the topic where the command was sent\\.||";
-        } else if (fromChat.is_forum) {
-          // commands in General topic
-          introduction +=
-              "\n*Commands in other places:*" +
-              "\nIn a personal chat with the bot:" +
-              "\n`.!pm_RUbot_doReset!.`" +
-              "\nIn the corresponding PM chat Topic:" +
-              "\n`.!pm_RUbot_ban!.`" +
-              "\n`.!pm_RUbot_unban!.`" +
-              "\n`.!pm_RUbot_silent_ban!.`" +
-              "\n`.!pm_RUbot_silent_unban!.`" +
-              "\n" +
-              "\n*Valid commands in here:*" +
-              "\n➡️`.!pm_RUbot_checkInit!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n>Check the initialization status, and the result reply is in the personal chat with the robot\\." +
-              "\n➡️`.!pm_RUbot_doInit!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n>Perform initial settings, and the result reply is in the personal chat with the robot\\." +
-              "\n➡️`.!pm_RUbot_doReset!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n>Reset the settings, and the result reply is in the personal chat with the robot\\." +
-              "\n";
-        } else {
-          // commands in bot chat
-          introduction +=
-              "\n*Commands in other places:*" +
-              "\nIn the general topic of the PM chat super group:" +
-              "\n`.!pm_RUbot_checkInit!.`" +
-              "\n`.!pm_RUbot_doInit!.`" +
-              "\n`.!pm_RUbot_doReset!.`" +
-              "\nIn the corresponding PM chat Topic:" +
-              "\n`.!pm_RUbot_ban!.`" +
-              "\n`.!pm_RUbot_unban!.`" +
-              "\n`.!pm_RUbot_silent_ban!.`" +
-              "\n`.!pm_RUbot_silent_unban!.`" +
-              "\n " +
-              "\n*Valid commands in here:*" +
-              "\n➡️`.!pm_RUbot_doReset!.`⬅️" +
-              "\n↗️*Press or Click to copy:*⬆️" +
-              "\n>Reset the settings\\." +
-              "\n";
-        }
+      } else {
+        // commands in bot chat
+        introduction +=
+            "\n*Commands in other places:*" +
+            "\nIn the general topic of the PM chat super group:" +
+            "\n`.!pm_RUbot_checkInit!.`" +
+            "\n`.!pm_RUbot_doInit!.`" +
+            "\n`.!pm_RUbot_doReset!.`" +
+            "\nIn the corresponding PM chat Topic:" +
+            "\n`.!pm_RUbot_ban!.`" +
+            "\n`.!pm_RUbot_unban!.`" +
+            "\n`.!pm_RUbot_silent_ban!.`" +
+            "\n`.!pm_RUbot_silent_unban!.`" +
+            "\n " +
+            "\n*Valid commands in here:*" +
+            "\n➡️`.!pm_RUbot_doReset!.`⬅️" +
+            "\n↗️*Press or Click to copy:*⬆️" +
+            "\n>Reset the settings\\." +
+            "\n";
       }
       const sendMessageResp = await (await postToTelegramApi(botToken, 'sendMessage', {
         chat_id: fromChat.id,
