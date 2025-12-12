@@ -581,14 +581,13 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
   // 检查验证状态 (Check verification status)
   const verificationStatus = parseVerificationStatus(fromChatId, metaDataMessage.text);
   let shouldAddReaction = true; // 默认添加表情反应
-  let shouldNotifyAdmin = true; // 默认通知管理员
+  let shouldNotifyAdmin = false; // 默认不通知管理员（只在验证成功时通知一次）
   let currentChallenge = null; // 当前挑战（用于转发时显示）
   let verificationResultInfo = null; // 验证结果信息（用于在话题中显示）
 
   // 处理验证逻辑 (Handle verification logic)
   if (!verificationStatus.isVerified && !verificationStatus.isBanned) {
     shouldAddReaction = false; // 未验证访客不添加表情标记
-    shouldNotifyAdmin = false; // 未验证访客不通知管理员
     
     // 检查是否需要重置（新的一天）
     const needsNewChallenge = verificationStatus.currentAnswer === 0 || 

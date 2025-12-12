@@ -23,3 +23,9 @@ crons = ["0 0 * * SUN"]
 #
 # 注意：环境变量需要在 Cloudflare Dashboard 的 Worker Settings 中配置
 # Note: Environment variables need to be configured in Cloudflare Dashboard Worker Settings
+[observability]
+[observability.logs]
+enabled = false
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
