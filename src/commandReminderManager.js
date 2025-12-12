@@ -8,30 +8,27 @@ import { postToTelegramApi } from './core.js';
 /**
  * 生成命令说明文本（英文）
  * Generate command instruction text in English
- * @returns {string} - 格式化的命令说明文本
+ * @returns {string} - 格式化的命令说明文本（MarkdownV2格式）
  */
 export function generateCommandText() {
-  const commandText = `**Available Commands:**
+  // MarkdownV2 格式：使用 * 加粗，特殊字符需要转义
+  const commandText = `*Available Commands:*
 
-➡️\`.!pm_RUbot_ban!.\`⬅️
-↗️*Press or Click to copy:*⬆️
-**>DESCRIPTION:**
->Block the topic where the command was sent, stop forwarding messages from the corresponding chat, and send a message to inform the other party that they have been banned.||
+➡️\`\\.\\!pm\\_RUbot\\_ban\\!\\.\`⬅️
+↗️_Press or Click to copy:_⬆️
+||Block the topic, stop forwarding messages, and notify the visitor that they have been banned\\.||
 
-➡️\`.!pm_RUbot_unban!.\`⬅️
-↗️*Press or Click to copy:*⬆️
-**>DESCRIPTION:**
->Unblock the topic where the command was sent, and send a message to inform the other party that they have been unbanned.||
+➡️\`\\.\\!pm\\_RUbot\\_unban\\!\\.\`⬅️
+↗️_Press or Click to copy:_⬆️
+||Unblock the topic and notify the visitor that they have been unbanned\\.||
 
-➡️\`.!pm_RUbot_silent_ban!.\`⬅️
-↗️*Press or Click to copy:*⬆️
-**>DESCRIPTION:**
->Block the topic where the command was sent. stop forwarding messages from the corresponding chat.||
+➡️\`\\.\\!pm\\_RUbot\\_silent\\_ban\\!\\.\`⬅️
+↗️_Press or Click to copy:_⬆️
+||Block the topic silently without notifying the visitor\\.||
 
-➡️\`.!pm_RUbot_silent_unban!.\`⬅️
-↗️*Press or Click to copy:*⬆️
-**>DESCRIPTION:**
->Unblock the topic where the command was sent.||`;
+➡️\`\\.\\!pm\\_RUbot\\_silent\\_unban\\!\\.\`⬅️
+↗️_Press or Click to copy:_⬆️
+||Unblock the topic silently without notifying the visitor\\.||`;
 
   return commandText;
 }

@@ -582,16 +582,48 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
   const verificationStatus = parseVerificationStatus(fromChatId, metaDataMessage.text);
   let shouldAddReaction = true; // 默认添加表情反应
   let shouldNotifyAdmin = true; // 默认通知管理员
-  let verificationMessageSent = false;
+  let currentChallenge = null; // 当前挑战（用于转发时显示）
+  let verificationResultInfo = null; // 验证结果信息（用于在话题中显示）
 
   // 处理验证逻辑 (Handle verification logic)
   if (!verificationStatus.isVerified && !verificationStatus.isBanned) {
     shouldAddReaction = false; // 未验证访客不添加表情标记
+    shouldNotifyAdmin = false; // 未验证访客不通知管理员
+    
+    // 检查是否需要重置（新的一天）
+    const needsNewChallenge = verificationStatus.currentAnswer === 0 || 
+                              isNewTopic || 
+                              isNewDay(verificationStatus.lastAttemptDate);
     
     // 检查是否是首次消息或需要新挑战
-    if (verificationStatus.currentAnswer === 0 || isNewTopic) {
-      // 首次消息，初始化验证状态并发送挑战
+    if (needsNewChallenge) {
+      // 首次消息或新的一天，初始化验证状态并发送挑战
       const initStatus = initializeVerificationStatus();
+      
+      // 如果是新的一天且之前失败过，增加失败天数
+      if (isNewDay(verificationStatus.lastAttemptDate) && verificationStatus.attempts >= 3) {
+        initStatus.failedDays = verificationStatus.failedDays + 1;
+        // 检查是否应该封禁
+        if (initStatus.failedDays >= 2) {
+          initStatus.isBanned = true;
+          const updatedMetaText = updateVerificationStatusInMetadata(
+            metaDataMessage.text,
+            topicId,
+            fromChatId,
+            initStatus
+          );
+          await editMetaDataMessage(botToken, ownerUid, metaDataMessage, updatedMetaText);
+          
+          const banText = `You have been automatically banned due to repeated verification failures.`;
+          await postToTelegramApi(botToken, 'sendMessage', {
+            chat_id: fromChatId,
+            text: banText,
+          });
+          return { success: false };
+        }
+      }
+      
+      currentChallenge = initStatus.challenge;
       
       // 更新元数据
       const updatedMetaText = updateVerificationStatusInMetadata(
@@ -608,14 +640,11 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
         chat_id: fromChatId,
         text: challengeText,
       });
-      
-      verificationMessageSent = true;
-      shouldNotifyAdmin = false; // 未验证前不通知管理员
     } else {
-      // 检查是否是答案
+      // 检查是否是答案（纯数字）
       const messageText = message.text?.trim();
       if (messageText && /^\d+$/.test(messageText)) {
-        // 可能是验证答案
+        // 这是验证答案
         const verifyResult = verifyAnswer(fromChatId, messageText, metaDataMessage.text);
         
         if (verifyResult.isCorrect) {
@@ -635,9 +664,10 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
             text: successText,
           });
           
-          shouldAddReaction = true; // 验证成功后添加表情
-          shouldNotifyAdmin = true; // 发送管理员通知
-          verificationMessageSent = true;
+          // 验证成功，添加表情和通知管理员
+          shouldAddReaction = true;
+          shouldNotifyAdmin = true;
+          verificationResultInfo = { type: 'success' };
         } else {
           // 答案错误
           const updatedMetaText = updateVerificationStatusInMetadata(
@@ -655,7 +685,7 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
               chat_id: fromChatId,
               text: banText,
             });
-            return { success: false };
+            verificationResultInfo = { type: 'banned' };
           } else if (verifyResult.attemptsExhausted) {
             // 当日尝试次数用尽
             const exhaustedText = `You have used all verification attempts for today. Please try again tomorrow.`;
@@ -663,8 +693,7 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
               chat_id: fromChatId,
               text: exhaustedText,
             });
-            verificationMessageSent = true;
-            shouldNotifyAdmin = false;
+            verificationResultInfo = { type: 'exhausted' };
           } else {
             // 还有重试机会，发送新挑战
             const retryText = `Incorrect answer. Please try again:\n\n${verifyResult.newChallenge.question}\n\nPlease reply with just the number.`;
@@ -672,19 +701,24 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
               chat_id: fromChatId,
               text: retryText,
             });
-            verificationMessageSent = true;
-            shouldNotifyAdmin = false;
+            verificationResultInfo = { type: 'retry', newChallenge: verifyResult.newChallenge };
           }
         }
       } else {
-        // 不是答案，继续转发但不通知管理员
-        shouldNotifyAdmin = false;
-      }
-      
-      // 如果当日已失败（尝试次数>=3），不回复访客
-      if (verificationStatus.attempts >= 3 && !verificationMessageSent) {
-        shouldNotifyAdmin = false;
-        // 继续转发消息但不回复
+        // 不是答案，需要重新发送当前挑战
+        currentChallenge = { answer: verificationStatus.currentAnswer };
+        
+        // 如果当日尝试次数已用尽，不回复访客
+        if (verificationStatus.attempts >= 3) {
+          // 继续转发消息但不回复
+        } else {
+          // 提醒访客需要先完成验证
+          const reminderText = `Please complete the verification first by answering the math question. Reply with just the number.`;
+          await postToTelegramApi(botToken, 'sendMessage', {
+            chat_id: fromChatId,
+            text: reminderText,
+          });
+        }
       }
     }
   }
@@ -696,6 +730,38 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
     from_chat_id: fromChatId,
     message_id: pmMessageId,
   })).json();
+  
+  // 如果是未验证访客，在转发消息后发送状态信息到话题
+  if (forwardMessageResp.ok && !verificationStatus.isVerified && !verificationStatus.isBanned) {
+    let statusText = '';
+    
+    if (verificationResultInfo) {
+      // 显示验证结果
+      if (verificationResultInfo.type === 'success') {
+        statusText = '✅ *VERIFICATION SUCCESSFUL*\\n\\n_Visitor has been verified\\. Future messages will trigger notifications\\._';
+      } else if (verificationResultInfo.type === 'banned') {
+        statusText = '🚫 *AUTO\\-BANNED*\\n\\n_Visitor has been automatically banned due to repeated verification failures\\._';
+      } else if (verificationResultInfo.type === 'exhausted') {
+        statusText = '⏰ *ATTEMPTS EXHAUSTED*\\n\\n_Visitor has used all verification attempts for today\\._';
+      } else if (verificationResultInfo.type === 'retry') {
+        const newQ = verificationResultInfo.newChallenge?.question || 'New challenge sent';
+        statusText = '❌ *WRONG ANSWER*\\n\\nNew challenge sent: `' + parseMdReserveWord(newQ) + '`';
+      }
+    } else if (currentChallenge) {
+      // 显示当前挑战
+      const challengeDisplay = currentChallenge.question || ('Sum equals ' + currentChallenge.answer);
+      statusText = '⚠️ *UNVERIFIED VISITOR*\\n\\nChallenge sent: `' + parseMdReserveWord(challengeDisplay) + '`\\n\\n_Waiting for verification\\.\\.\\._';
+    }
+    
+    if (statusText) {
+      await postToTelegramApi(botToken, 'sendMessage', {
+        chat_id: superGroupChatId,
+        message_thread_id: topicId,
+        text: statusText,
+        parse_mode: "MarkdownV2",
+      });
+    }
+  }
 
   if (forwardMessageResp.ok) {
     const topicMessageId = forwardMessageResp.result.message_id;
