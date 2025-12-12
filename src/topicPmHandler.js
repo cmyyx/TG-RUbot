@@ -16,6 +16,9 @@ import { sendCommandReminder } from './commandReminderManager.js';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// 访客欢迎消息常量
+const VISITOR_WELCOME_TEXT = `Welcome! I'm a PM bot.\nI'll forward your messages to my owner, and vice versa.\n\nThe emoji reaction 🕊 indicates a successful forward.\nIf you don't see it, the message hasn't been forwarded.`;
+
 // ---------------------------------------- MOTHER BOT ----------------------------------------
 
 /**
@@ -594,6 +597,14 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
   let currentChallenge = null; // 当前挑战（用于转发时显示）
   let verificationResultInfo = null; // 验证结果信息（用于在话题中显示）
 
+  // 已验证用户发送 /start 时，发送欢迎消息
+  if (verificationStatus.isVerified && (message.text === '/start' || message.text?.startsWith('/start@'))) {
+    await postToTelegramApi(botToken, 'sendMessage', {
+      chat_id: fromChatId,
+      text: VISITOR_WELCOME_TEXT,
+    });
+  }
+
   // 处理验证逻辑 (Handle verification logic)
   if (!verificationStatus.isVerified && !verificationStatus.isBanned) {
     shouldAddReaction = false; // 未验证访客不添加表情标记
@@ -642,8 +653,16 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
       );
       await editMetaDataMessage(botToken, ownerUid, metaDataMessage, updatedMetaText);
       
+      // 如果是 /start 命令，先发送欢迎消息
+      if (message.text === '/start' || message.text?.startsWith('/start@')) {
+        await postToTelegramApi(botToken, 'sendMessage', {
+          chat_id: fromChatId,
+          text: VISITOR_WELCOME_TEXT,
+        });
+      }
+      
       // 发送验证挑战和说明给访客
-      const challengeText = `Hello! To prevent spam, please solve this simple math problem:\n\n${initStatus.challenge.question}\n\nPlease reply with just the number.`;
+      const challengeText = `To prevent spam, please solve this simple math problem:\n\n${initStatus.challenge.question}\n\nPlease reply with just the number.`;
       await postToTelegramApi(botToken, 'sendMessage', {
         chat_id: fromChatId,
         text: challengeText,
@@ -716,6 +735,14 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
         // 不是答案，需要重新发送当前挑战
         currentChallenge = { answer: verificationStatus.currentAnswer };
         
+        // 如果是 /start 命令，发送欢迎消息
+        if (message.text === '/start' || message.text?.startsWith('/start@')) {
+          await postToTelegramApi(botToken, 'sendMessage', {
+            chat_id: fromChatId,
+            text: VISITOR_WELCOME_TEXT,
+          });
+        }
+        
         // 如果当日尝试次数已用尽，不回复访客
         if (verificationStatus.attempts >= 3) {
           // 继续转发消息但不回复
@@ -746,19 +773,19 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
     if (verificationResultInfo) {
       // 显示验证结果
       if (verificationResultInfo.type === 'success') {
-        statusText = '✅ *VERIFICATION SUCCESSFUL*\\n\\n_Visitor has been verified\\. Future messages will trigger notifications\\._';
+        statusText = '✅ *VERIFICATION SUCCESSFUL*\n\n_Visitor has been verified\\. Future messages will trigger notifications\\._';
       } else if (verificationResultInfo.type === 'banned') {
-        statusText = '🚫 *AUTO\\-BANNED*\\n\\n_Visitor has been automatically banned due to repeated verification failures\\._';
+        statusText = '🚫 *AUTO\\-BANNED*\n\n_Visitor has been automatically banned due to repeated verification failures\\._';
       } else if (verificationResultInfo.type === 'exhausted') {
-        statusText = '⏰ *ATTEMPTS EXHAUSTED*\\n\\n_Visitor has used all verification attempts for today\\._';
+        statusText = '⏰ *ATTEMPTS EXHAUSTED*\n\n_Visitor has used all verification attempts for today\\._';
       } else if (verificationResultInfo.type === 'retry') {
         const newQ = verificationResultInfo.newChallenge?.question || 'New challenge sent';
-        statusText = '❌ *WRONG ANSWER*\\n\\nNew challenge sent: `' + parseMdReserveWord(newQ) + '`';
+        statusText = '❌ *WRONG ANSWER*\n\nNew challenge sent: `' + parseMdReserveWord(newQ) + '`';
       }
     } else if (currentChallenge) {
       // 显示当前挑战
       const challengeDisplay = currentChallenge.question || ('Sum equals ' + currentChallenge.answer);
-      statusText = '⚠️ *UNVERIFIED VISITOR*\\n\\nChallenge sent: `' + parseMdReserveWord(challengeDisplay) + '`\\n\\n_Waiting for verification\\.\\.\\._';
+      statusText = '⚠️ *UNVERIFIED VISITOR*\n\nChallenge sent: `' + parseMdReserveWord(challengeDisplay) + '`\n\n_Waiting for verification\\.\\.\\._';
     }
     
     if (statusText) {
