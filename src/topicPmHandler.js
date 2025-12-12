@@ -7,6 +7,7 @@ import {
   initializeVerificationStatus,
   verifyAnswer,
   updateVerificationStatusInMetadata,
+  serializeVerificationStatus,
   needsVerification,
   isNewDay
 } from './verificationManager.js';
@@ -289,8 +290,16 @@ export function parseMetaDataMessage(metaDataMessage) {
  * @param {number} fromChatId - 访客聊天ID
  * @returns {Promise<{messageText: string}>}
  */
-async function addTopicToFromChatOnMetaData(botToken, metaDataMessage, ownerUid, topicId, fromChatId) {
-  const newText = `${metaDataMessage.text};${topicId}:${fromChatId}`
+async function addTopicToFromChatOnMetaData(botToken, metaDataMessage, ownerUid, topicId, fromChatId, verificationStatus = null) {
+  // 如果提供了验证状态，使用它；否则默认为未验证状态（currentAnswer=0 表示需要初始化）
+  let statusPrefix = '';
+  if (verificationStatus) {
+    statusPrefix = serializeVerificationStatus(fromChatId, verificationStatus);
+  } else {
+    // 新用户默认添加为未验证状态，currentAnswer=0 表示需要初始化
+    statusPrefix = `v0_0_0_0_${fromChatId}`;
+  }
+  const newText = `${metaDataMessage.text};${topicId}:${statusPrefix}`
   return await editMetaDataMessage(botToken, ownerUid, metaDataMessage, newText);
 }
 

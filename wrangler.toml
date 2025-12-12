@@ -25,7 +25,7 @@ crons = ["0 0 * * SUN"]
 # Note: Environment variables need to be configured in Cloudflare Dashboard Worker Settings
 [observability]
 [observability.logs]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 invocation_logs = true
 persist = true
