@@ -25,6 +25,32 @@ import {
 
 export const allowed_updates = ['message', 'message_reaction', 'edited_message'];
 
+// 访客欢迎消息 (MarkdownV2 格式)
+export const VISITOR_WELCOME_TEXT = "*Welcome\\!*" +
+    "\n>I'm a PM bot\\." +
+    "\n>I'll forward your messages to my owner, and vice versa\\." +
+    "\n*There are some details below:*" +
+    "\n**>EMOJI REACTION:" +
+    "\n>  The emoji reaction 🕊 as seen below this message, indicates a successful forward\\." +
+    "\n>  If you don't see that, the message hasn't been forwarded\\." +
+    "\n>" +
+    "\n>  You can tap other emoji reaction for both your and my messages\\(except this one\\), and I'll forward it as well\\." +
+    "\n>  But as a bot, limited by TG, I can only send ONE FREE emoji reaction for each message\\." +
+    "\n>  So that if you're a tg\\-premium\\-user and tap many emoji reactions for one message\\. I'll only forward the last one if it's a free emoji\\.||" +
+    "\n**>EDIT MESSAGE:" +
+    "\n>  You can edit your message as usual, but ONLY TEXT message for now\\. " +
+    "If forward success, the emoji reaction 🦄 will swiftly appear and revert to 🕊 after about 1s\\." +
+    "\n>  If you don't see that, the EDITING hasn't been forwarded\\." +
+    "\n>  Perhaps you miss seeing that, you can try edit AGAIN with DIFFERENT CONTENT\\.||" +
+    "\n**>DELETE MESSAGE:" +
+    "\n>  You can delete your messages I forwarded by REPLYING the origin message and TYPING `#del` to me\\." +
+    " No additional process is needed\\." +
+    "\n>  But I can only delete my own messages, not yours\\. So, you need to delete the messages for yourself," +
+    " include \\[origin message\\] \\[command message\\] and \\[notify message\\]\\.||" +
+    "\n" +
+    "\n*If you want to see this message again,*" +
+    "\n*Send `/start` to me\\.*";
+
 /**
  * 验证密钥令牌格式
  * Validate secret token format
@@ -325,32 +351,8 @@ export async function handleWebhook(request, ownerUid, botToken, secretToken, ch
 
   try {
     if ("/start" === message.text && fromUser.id.toString() === ownerUid) {
-      // Introduction words for owner only
-      let introduction = "*Welcome\\!*" +
-          "\n>I'm a PM bot\\." +
-          "\n>I'll forward your messages to my owner, and vice versa\\." +
-          "\n*There are some details below:*" +
-          "\n**>EMOJI REACTION:" +
-          "\n>  The emoji reaction 🕊 as seen below this message, indicates a successful forward\\." +
-          "\n>  If you don't see that, the message hasn't been forwarded\\." +
-          "\n>" +
-          "\n>  You can tap other emoji reaction for both your and my messages\\(except this one\\), and I'll forward it as well\\." +
-          "\n>  But as a bot, limited by TG, I can only send ONE FREE emoji reaction for each message\\." +
-          "\n>  So that if you're a tg\\-premium\\-user and tap many emoji reactions for one message\\. I'll only forward the last one if it's a free emoji\\.||" +
-          "\n**>EDIT MESSAGE:" +
-          "\n>  You can edit your message as usual, but ONLY TEXT message for now\\. " +
-          "If forward success, the emoji reaction 🦄 will swiftly appear and revert to 🕊 after about 1s\\." +
-          "\n>  If you don't see that, the EDITING hasn't been forwarded\\." +
-          "\n>  Perhaps you miss seeing that, you can try edit AGAIN with DIFFERENT CONTENT\\.||" +
-          "\n**>DELETE MESSAGE:" +
-          "\n>  You can delete your messages I forwarded by REPLYING the origin message and TYPING `#del` to me\\." +
-          " No additional process is needed\\." +
-          "\n>  But I can only delete my own messages, not yours\\. So, you need to delete the messages for yourself," +
-          " include \\[origin message\\] \\[command message\\] and \\[notify message\\]\\.||" +
-          "\n" +
-          "\n*If you want to see this message again,*" +
-          "\n*Send `/start` to me\\.*";
-      // for owner only
+      // Introduction words - 复用访客欢迎消息，然后添加管理员专用内容
+      let introduction = VISITOR_WELCOME_TEXT;
       // for owner only
       introduction += "\n" +
           "\n*The contents below are ONLY visible and valid for bot owner\\.*" +

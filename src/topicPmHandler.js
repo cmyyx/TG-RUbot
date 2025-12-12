@@ -1,4 +1,4 @@
-import { allowed_updates, postToTelegramApi } from './core';
+import { allowed_updates, postToTelegramApi, VISITOR_WELCOME_TEXT } from './core';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -15,9 +15,6 @@ import { sendCommandReminder } from './commandReminderManager.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-// 访客欢迎消息常量
-const VISITOR_WELCOME_TEXT = `Welcome! I'm a PM bot.\nI'll forward your messages to my owner, and vice versa.\n\nThe emoji reaction 🕊 indicates a successful forward.\nIf you don't see it, the message hasn't been forwarded.`;
 
 // ---------------------------------------- MOTHER BOT ----------------------------------------
 
@@ -602,6 +599,7 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
     await postToTelegramApi(botToken, 'sendMessage', {
       chat_id: fromChatId,
       text: VISITOR_WELCOME_TEXT,
+      parse_mode: 'MarkdownV2',
     });
   }
 
@@ -658,6 +656,7 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
         await postToTelegramApi(botToken, 'sendMessage', {
           chat_id: fromChatId,
           text: VISITOR_WELCOME_TEXT,
+          parse_mode: 'MarkdownV2',
         });
       }
       
@@ -740,6 +739,7 @@ export async function processPMReceived(botToken, ownerUid, message, superGroupC
           await postToTelegramApi(botToken, 'sendMessage', {
             chat_id: fromChatId,
             text: VISITOR_WELCOME_TEXT,
+            parse_mode: 'MarkdownV2',
           });
         }
         
